@@ -253,15 +253,17 @@ def main():
 
 def test():
     print("Starting the test procedure.")
-    # test_chance_lower_card()
-    # test_chance_four_card_flip()
-    # test_mcts_runtime()
+    test_chance_lower_card()
+    test_chance_four_card_flip()
+    test_mcts_runtime()
     # game.test_determinize()
     # game.test_simulation_runtime()
-    # test_mcts_node_count()
-    game.test_mcts_vs_mcts()
-
+    test_mcts_node_count()
     print("Testing over.")
+
+
+def collect_data():
+    game.test_mcts_vs_mcts()
 
 
 def test_chance_lower_card():
@@ -270,8 +272,8 @@ def test_chance_lower_card():
     game_board.non_turn_player = game_board.player2
     game_board.player1.hand = []
     game_board.player2.hand = []
-    game_board.pile.append(game.Card("Ace of Hearts", 14))
-    game_board.deck[0] = game.Card("Four of Diamonds", 4)
+    game_board.pile.append(game.Card("Ace of Hearts"))
+    game_board.deck[0] = game.Card("Four of Diamonds")
     game_board.play_move("chance")
     assert len(game_board.pile) == 1 and sorted(game.card_values(game_board.player1.hand)) == [4, 14]
 
@@ -283,11 +285,11 @@ def test_chance_four_card_flip():
     game_board.player1.hand = []
     game_board.player2.hand = []
 
-    game_board.player1.hand.append(game.Card("Ace of Spades", 14))
-    game_board.pile.append(game.Card("Four of Hearts", 4))
-    game_board.pile.append(game.Card("Four of Spades", 4))
-    game_board.pile.append(game.Card("Four of Clubs", 4))
-    game_board.deck[0] = game.Card("Four of Diamonds", 4)
+    game_board.player1.hand.append(game.Card("Ace of Spades"))
+    game_board.pile.append(game.Card("Four of Hearts"))
+    game_board.pile.append(game.Card("Four of Spades"))
+    game_board.pile.append(game.Card("Four of Clubs"))
+    game_board.deck[0] = game.Card("Four of Diamonds")
     game_board.play_move("chance")
     assert game_board.legal_moves() != ["pass"]
 

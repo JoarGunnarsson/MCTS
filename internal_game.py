@@ -2,6 +2,7 @@ import random
 from AI import MCTS, LowestCard, Random, Node
 import skitgubbe as gui
 import time
+import utility_functions as utils
 
 
 class Board:
@@ -23,7 +24,7 @@ class Board:
         self.non_turn_player = players[random_index - 1]
         self.winner = None
 
-        self.deck = self.new_deck()
+        self.deck = new_deck()
 
         random.shuffle(self.deck)
         self.removed_cards = []
@@ -33,73 +34,10 @@ class Board:
         self.player2.hand = self.deck[:self.starting_cards]
         del self.deck[:self.starting_cards]
 
-        self.pile = [Card("Pile Bottom", 0)]
-
-    def new_deck(self):
-        deck = [
-            Card("Two of Hearts", 2),
-            Card("Three of Hearts", 3),
-            Card("Four of Hearts", 4),
-            Card("Five of Hearts", 5),
-            Card("Six of Hearts", 6),
-            Card("Seven of Hearts", 7),
-            Card("Eight of Hearts", 8),
-            Card("Nine of Hearts", 9),
-            Card("Ten of Hearts", 10),
-            Card("Jack of Hearts", 11),
-            Card("Queen of Hearts", 12),
-            Card("King of Hearts", 13),
-            Card("Ace of Hearts", 14),
-
-            Card("Two of Diamonds", 2),
-            Card("Three of Diamonds", 3),
-            Card("Four of Diamonds", 4),
-            Card("Five of Diamonds", 5),
-            Card("Six of Diamonds", 6),
-            Card("Seven of Diamonds", 7),
-            Card("Eight of Diamonds", 8),
-            Card("Nine of Diamonds", 9),
-            Card("Ten of Diamonds", 10),
-            Card("Jack of Diamonds", 11),
-            Card("Queen of Diamonds", 12),
-            Card("King of Diamonds", 13),
-            Card("Ace of Diamonds", 14)]
-        """
-
-            Card("Two of Spades", 2),
-            Card("Three of Spades", 3),
-            Card("Four of Spades", 4),
-            Card("Five of Spades", 5),
-            Card("Six of Spades", 6),
-            Card("Seven of Spades", 7),
-            Card("Eight of Spades", 8),
-            Card("Nine of Spades", 9),
-            Card("Ten of Spades", 10),
-            Card("Jack of Spades", 11),
-            Card("Queen of Spades", 12),
-            Card("King of Spades", 13),
-            Card("Ace of Spades", 14),
-
-            Card("Two of Clubs", 2),
-            Card("Three of Clubs", 3),
-            Card("Four of Clubs", 4),
-            Card("Five of Clubs", 5),
-            Card("Six of Clubs", 6),
-            Card("Seven of Clubs", 7),
-            Card("Eight of Clubs", 8),
-            Card("Nine of Clubs", 9),
-            Card("Ten of Clubs", 10),
-            Card("Jack of Clubs", 11),
-            Card("Queen of Clubs", 12),
-            Card("King of Clubs", 13),
-            Card("Ace of Clubs", 14),
-        ]"""
-        return deck
+        self.pile = [Card("Pile of Bottom")]
 
     def end_turn(self):
         """Ends the current turn by switching who is the turn player."""
-        for card in self.pile:
-            card.last_played_by = None
         self.turn_player, self.non_turn_player = self.non_turn_player, self.turn_player
         self.turn += 1
 
@@ -122,7 +60,7 @@ class Board:
     def legal_moves(self):
         """Returns the legal moves for the turn player."""
         legal_moves = []
-        if self.pile[-1].last_played_by == self.turn_player.id:
+        if self.turn_player.can_pass:
             legal_moves.append("pass")
             for card in self.turn_player.hand:
                 if card.value == self.pile[-1].value:
@@ -130,7 +68,8 @@ class Board:
             return legal_moves
 
         for card in self.turn_player.hand:
-            if card.value >= self.pile[-1].value or card.value == 2 or card.value == 10:
+            is_special_card = card.value == 2 or card.value == 10
+            if card.value >= self.pile[-1].value or is_special_card:
                 legal_moves.append(card)
 
         if len(self.pile) > 1:
@@ -146,12 +85,13 @@ class Board:
         new_board = self.copy()
         cards_in_opponents_hand = len(new_board.non_turn_player.hand)
         new_board.non_turn_player.hand = []
-        base_deck = self.new_deck()
+        base_deck = new_deck()
         deck = []
         for card in base_deck:
-            if card.name in card_names(self.pile) or card.name in card_names(self.removed_cards) or card.name in card_names(self.turn_player.hand):
+            if card.name in utils.card_names(self.pile) or card.name in utils.card_names(self.removed_cards) or \
+                    card.name in utils.card_names(self.turn_player.hand):
                 continue
-            if card.name in card_names(self.turn_player.seen_cards):
+            if card.name in utils.card_names(self.turn_player.seen_cards):
                 new_board.non_turn_player.hand.append(card)
                 continue
 
@@ -171,17 +111,17 @@ class Board:
         """Makes the turn player play the given move. Takes the move as input."""
         if move == "chance":
             card = self.deck[0]
-            card.last_played_by = self.turn_player.id
             self.pile.append(card)
             if real_game and card not in self.player1.seen_cards:
                 self.player1.seen_cards.append(card)
             if real_game and card not in self.player2.seen_cards:
                 self.player2.seen_cards.append(card)
             del self.deck[0]
-            if card.value < self.pile[-2].value and card.value != 2 and card.value != 10:
+            not_special_card = card.value != 2 and card.value != 10
+            if card.value < self.pile[-2].value and not_special_card:
                 self.turn_player.hand.extend(self.pile[1:])
                 del self.pile[1:]
-                self.pile[0].last_played_by = self.turn_player.id
+                self.turn_player.can_pass = True
                 return
 
             top_four_card_values = card_values(self.pile[-4:])
@@ -194,25 +134,24 @@ class Board:
                         safe_remove(self.player2.seen_cards, card)
 
                 del self.pile[1:]
+                self.turn_player.can_pass = False
                 return
 
-            card.last_played_by = self.turn_player.id
-            self.pile[0].last_played_by = None
+            self.turn_player.can_pass = True
             return
 
         elif move == "pass":
-            self.pile[0].last_played_by = None
+            self.turn_player.can_pass = False
             self.end_turn()
             return
 
         elif move == "pile":
             self.turn_player.hand.extend(self.pile[1:])
             del self.pile[1:]
-            self.pile[0].last_played_by = self.turn_player.id
+            self.turn_player.can_pass = True
             return
 
         card = move
-        card.last_played_by = self.turn_player.id
         self.pile.append(card)
 
         if real_game and card not in self.player1.seen_cards:
@@ -220,13 +159,10 @@ class Board:
         if real_game and card not in self.player2.seen_cards:
             self.player2.seen_cards.append(card)
 
-        for hand_card in self.turn_player.hand:
-            if hand_card.name == card.name:
-                self.turn_player.hand.remove(hand_card)
-                break
+        self.turn_player.hand.remove(card)
+
         if len(self.turn_player.hand) < 3:
             self.draw(self.turn_player)
-        self.pile[0].last_played_by = None
 
         top_four_card_values = card_values(self.pile[-4:])
         if card.value == 10 or len(top_four_card_values) == 4 and top_four_card_values.count(
@@ -238,8 +174,9 @@ class Board:
                     safe_remove(self.player2.seen_cards, card)
 
             del self.pile[1:]
+            self.turn_player.can_pass = False
             return
-
+        self.turn_player.can_pass = True
         return
 
     def play_one_turn(self, real_game=False):
@@ -262,7 +199,7 @@ class Board:
             + "\n" + self.turn_player.name + "'s hand: " + str(self.turn_player.hand) + "\n" \
             + self.non_turn_player.name + "'s hand: " + str(self.non_turn_player.hand) + "\n" \
             + str(self.pile[-5:]) + "\n" \
-            + "-" * 30 + "\n"\
+            + "-" * 30 + "\n" \
             + str(self.deck) + "\n" \
             + str(self.pile) + "\n" \
             + str(self.removed_cards) + "\n"
@@ -298,6 +235,7 @@ class Player:
         self.ai = ai
         self.id = 0
         self.seen_cards = []
+        self.can_pass = False
 
     def set_ai(self, ai):
         self.ai = ai
@@ -336,25 +274,22 @@ class Player:
 
 
 class Card:
-    def __init__(self, name="Card of Test", value=0):
+    def __init__(self, name, value=None):
         self.name = name
-        self.value = value
-        self.last_played_by = None
+        if value is None:
+            self.value = utils.get_card_value(name)
+        else:
+            self.value = value
 
     def __repr__(self):
         return self.name
 
-    def __eq__(self, other):
-        if type(other) != Card:
-            return False
-        if self.name == other.name:
-            return True
-        return False
 
-    def copy(self):
-        new_card = Card(self.name, self.value)
-        new_card.last_played_by = self.last_played_by
-        return new_card
+def new_deck():
+    suits = ["Hearts", "Diamonds", "Spades", "Clubs"]
+    values = ["Two", "Three", "Four", "Five", "Six", "Seven", "Eight", "Nine", "Ten", "Jack", "Queen", "King", "Ace"]
+    deck = [Card(value + " of " + suit) for suit in suits for value in values]
+    return deck
 
 
 def card_values(card_list):
@@ -364,17 +299,10 @@ def card_values(card_list):
     return values
 
 
-def card_names(card_list):
-    values = []
-    for card in card_list:
-        values.append(card.name)
-    return values
-
-
 def copy_card_list(card_list):
     new_card_list = []
     for card in card_list:
-        new_card_list.append(card.copy())
+        new_card_list.append(card)
     return new_card_list
 
 
@@ -388,7 +316,7 @@ def safe_remove(card_list, card_to_remove):
 def board_string(game_board):
     """Returns a string showing the current board state, from the perspective of the human player. Assumes the human
     is player 1."""
-    cards_in_pile = str(len(game_board.pile)-1)
+    cards_in_pile = str(len(game_board.pile) - 1)
     if cards_in_pile == "1":
         pile_card_string = "card"
     else:
@@ -427,6 +355,7 @@ def test_determinize():
     while len(p2.hand) < 3:
         board.draw(p2)
 
+    print(board)
     p1.hand.append(Card("Test of Hearts", 15))
     p2.hand.append(Card("Test of Clubs", 15))
     board.play_move(p1.hand[-1])
@@ -446,6 +375,8 @@ def test_determinize():
         if card.name == "Test of Clubs":
             test_of_clubs_in_hand = True
 
+    print(det_board)
+    print(board)
     assert test_of_clubs_in_hand
     assert test_of_hearts_in_hand
 
@@ -527,7 +458,7 @@ def test_mcts_vs_lowest():
         print("MCTS:", mcts_score)
         print("LowestCard:", lowest_score)
         print(game_board)
-        print("\n"*5)
+        print("\n" * 5)
 
 
 def test_mcts_vs_mcts():
@@ -538,7 +469,7 @@ def test_mcts_vs_mcts():
         game_board = Board()
         game_board.player1.set_ai(MCTS(allowed_time=1))
         game_board.player1.set_name("Player1")
-        game_board.player2.set_ai(MCTS(allowed_time=1,  number_of_trees=10))
+        game_board.player2.set_ai(MCTS(allowed_time=1, number_of_trees=10))
         game_board.player2.set_name("Player2")
         game_board.play_one_game()
         if game_board.winner.name == "Player1":
@@ -551,4 +482,4 @@ def test_mcts_vs_mcts():
         print("Player1:", p1_score)
         print("Player2:", p2_score)
         print(game_board)
-        print("\n"*5)
+        print("\n" * 5)

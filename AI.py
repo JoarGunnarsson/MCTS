@@ -3,6 +3,7 @@ import math
 import time
 import numpy as np
 import matplotlib.pyplot as plt
+import utility_functions as utils
 
 
 # Implement some way to fix the inherent randomness. Multiple trees might fix this.
@@ -130,10 +131,9 @@ class LowestCard(AI):
         moves = []
         special_cards = []
         for card in legal_moves:
-            if type(card) == str:
+            if card in ["pass", "chance", "pile"]:
                 continue
-            elif card.value == 2 and (board.pile[-1].value != 2 or board.pile[-1].last_played_by == board.turn_player.id) \
-                    or card.value == 10:
+            elif card.value == 2 or card.value == 10:
                 special_cards.append(card)
             else:
                 moves.append(card)
@@ -180,8 +180,8 @@ class MCTS(AI):
             while time.time() - start_time < max(time_per_tree, 0.05):
                 self.mcts_round(root_node)
                 n += 1
-            #root_node.show_tree()
-            #print("Visits to the root node: " + str(root_node.n) + ". Allowed time: " + str(self.allowed_time) + " seconds.")
+            # root_node.show_tree()
+            # print("Visits to the root node: " + str(root_node.n) + ". Allowed time: " + str(self.allowed_time) + " seconds.")
             best_child = mcts_select_node(root_node, "n")
             best_move = best_child.move
             for i, move in enumerate(legal_moves):
@@ -231,8 +231,8 @@ class MCTS(AI):
 
     def simulation(self, node):
         simulation_board = node.board.copy()
-        simulation_board.player1.ai = Random()  # Hard coded, fix this? TODO
-        simulation_board.player2.ai = Random()  # Hard coded, fix this? TODO
+        simulation_board.player1.ai = LowestCard()  # Hard coded, fix this? TODO
+        simulation_board.player2.ai = LowestCard()  # Hard coded, fix this? TODO
         board = simulation_board.play_one_game(real_game=False)
         return board
 
@@ -282,4 +282,3 @@ def card_sort(cards):
             j = j - 1
         cards[j + 1] = x
         i = i + 1
-
