@@ -16,7 +16,7 @@ class Board:
         player2_id = player1_id - 5
         self.player1 = Player(None, "Human Guy")
         self.player1.id = player1_id
-        self.player2 = Player(MCTS(allowed_time=3, number_of_trees=30), "MCTS Man")
+        self.player2 = Player(MCTS(allowed_time=0.1, number_of_trees=1), "MCTS Man")
         self.player2.id = player2_id
         players = [self.player1, self.player2]
         random_index = random.randint(0, 1)
@@ -48,8 +48,8 @@ class Board:
 
     def check_winning_position(self):
         """Checks if the current board is a win for either player. A player with 0 cards in their hand has won.
-        If the turn count exceeds 300, the MCTS player (or player 2 in general) loses."""
-        if (len(self.player1.hand) == 0 and len(self.deck) == 0) or self.turn >= 300:
+        If the turn count exceeds 1000, the MCTS player (or player 2 in general) loses."""
+        if (len(self.player1.hand) == 0 and len(self.deck) == 0) or self.turn >= 1000:
             self.winner = self.player1
             return True
         elif len(self.player2.hand) == 0 and len(self.deck) == 0:
@@ -467,9 +467,10 @@ def test_mcts_vs_mcts():
     p2_score = 0
     for game_number in range(number_of_games):
         game_board = Board()
-        game_board.player1.set_ai(MCTS(allowed_time=1))
+        game_board.player1.set_ai(MCTS(allowed_time=0.1))
+        game_board.player1.ai.c = 1
         game_board.player1.set_name("Player1")
-        game_board.player2.set_ai(MCTS(allowed_time=1, number_of_trees=10))
+        game_board.player2.set_ai(MCTS(allowed_time=0.1))
         game_board.player2.set_name("Player2")
         game_board.play_one_game()
         if game_board.winner.name == "Player1":

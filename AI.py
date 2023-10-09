@@ -1,8 +1,6 @@
 import random
 import math
 import time
-import numpy as np
-import matplotlib.pyplot as plt
 import utility_functions as utils
 
 
@@ -16,7 +14,7 @@ import utility_functions as utils
 class Node:
     """Class representing the nodes used for MCTS."""
 
-    def __init__(self, parent, board):
+    def __init__(self, parent, board, c=math.sqrt(2)):
         self.c = math.sqrt(2)
         self.children = None
         self.parent = parent
@@ -35,63 +33,12 @@ class Node:
             self.legal_moves = self.board.legal_moves()
         move = self.legal_moves.pop(0)
 
-        new_child = Node(self, self.board.copy())
+        new_child = Node(self, self.board.copy(), self.c)
         new_child.board.play_move(move, real_game=False)
         new_child.move = move
         self.children.append(new_child)
 
         return new_child
-
-    def show_tree(self):
-        self.draw_tree(mode="all")
-        plt.show()
-
-    def draw_tree(self, left_edge=0, right_edge=500, depth=1, mode="all"):
-        """Recursively draws the tree until depth TOTAL_DEPTH."""
-        HEIGHT = 500
-        TOTAL_DEPTH = 7
-        if depth == TOTAL_DEPTH:
-            return
-
-        if mode == "all":
-            nodes_to_visit = self.children
-        else:
-            if self.children is not None:
-                nodes_to_visit = [mcts_select_node(self, mode="n")]
-            else:
-                nodes_to_visit = None
-        self.x = int((right_edge - left_edge) / 2 + left_edge)
-        self.y = int(HEIGHT - HEIGHT / TOTAL_DEPTH * depth)
-        if self.board.turn_player.id == self.board.player1.id:
-            color = "g"
-        else:
-            color = "r"
-
-        if self.move == "chance" and self.parent is not None:
-            move_str = "chance " + str(self.parent.board.deck[0])
-        else:
-            move_str = str(self.move)
-
-        plt.text(self.x + 5, self.y + 5, move_str + ", " + str(self.board.turn_player))
-        plt.text(self.x - 5, self.y - 5, str(self.wins) + "/" + str(self.n))
-        if nodes_to_visit is None:
-            plt.scatter(self.x, self.y, c=color, marker="s")
-            return
-
-        if depth == TOTAL_DEPTH - 1:
-            plt.scatter(self.x, self.y, c=color, marker="v")
-        else:
-            plt.scatter(self.x, self.y, c=color)
-        # Spaces the child nodes properly.
-        length_per_child = (right_edge - left_edge) // len(nodes_to_visit)
-        for i, child in enumerate(nodes_to_visit):
-            self.children[i].draw_tree(left_edge + i * length_per_child, left_edge + (i + 1) * length_per_child,
-                                       depth + 1, mode=mode)
-
-        # Connects parents to their children with lines.
-        if depth != TOTAL_DEPTH - 1:
-            for i, child in enumerate(nodes_to_visit):
-                plt.plot([self.x, self.children[i].x], [self.y, self.children[i].y], "k")
 
     def __repr__(self):
         return "Turn: " + str(self.board.turn) + ", Wins: " + str(self.wins) + ", Visits: " + str(self.n)
@@ -159,10 +106,11 @@ class LowestCard(AI):
 class MCTS(AI):
     """Class for the MCTS AI strategy."""
 
-    def __init__(self, allowed_time=1, number_of_trees=1):
+    def __init__(self, allowed_time=1, number_of_trees=1, c = math.sqrt(2)):
         AI.__init__(self)
         self.allowed_time = allowed_time
         self.number_of_trees = number_of_trees
+        self.c = c
 
     def compute_next_move(self, board):
         """Computes the next move, given the current state of the game. Returns True the number to be chosen."""
@@ -174,7 +122,7 @@ class MCTS(AI):
         move_scores = [0 for _ in legal_moves]
         for tree in range(self.number_of_trees):
             determinized_board = board.determinize()
-            root_node = Node(None, determinized_board)
+            root_node = Node(None, determinized_board, self.c)
             start_time = time.time()
             n = 0
             while time.time() - start_time < max(time_per_tree, 0.05):
@@ -265,7 +213,7 @@ def mcts_score_node(child, parent, mode="score"):
     if mode == "n":
         return child.n
     if child.n == 0:
-        return np.inf
+        return 10**100
     if parent.board.turn_player.id == child.board.turn_player.id:
         return child.wins / child.n + child.c * math.sqrt(math.log(child.parent.n) / child.n)
     return (child.n - child.wins) / child.n + child.c * math.sqrt(math.log(child.parent.n) / child.n)

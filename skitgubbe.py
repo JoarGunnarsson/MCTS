@@ -21,7 +21,7 @@ tty.setcbreak(sys.stdin)
 # TODO: Perhaps create a move for playing 2 of the same cards, so the user doesnt have to wait for so long.
 # TODO: Why does the MCTS ai always try to pick up the pile or chance? If playing 4 of a kind is not possible,
 # the ai loses every game (for example by removing some cards from the deck). This should not happen.
-
+# TODO: In the gui, perhaps show every card, but pressing enter on cards that are too low does nothing?
 
 class Button:
     def __init__(self, name, key="", can_be_pressed=True):
@@ -260,9 +260,11 @@ def test():
     # game.test_simulation_runtime()
     test_mcts_node_count()
     print("Testing over.")
+    collect_data()
 
 
 def collect_data():
+    # game.test_mcts_vs_lowest()
     game.test_mcts_vs_mcts()
 
 
