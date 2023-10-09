@@ -15,7 +15,7 @@ class Board:
         player2_id = player1_id - 5
         self.player1 = Player(None, "Human Guy")
         self.player1.id = player1_id
-        self.player2 = Player(MCTS(allowed_time=10, number_of_trees=1), "MCTS Man")
+        self.player2 = Player(MCTS(allowed_time=3, number_of_trees=30), "MCTS Man")
         self.player2.id = player2_id
         players = [self.player1, self.player2]
         random_index = random.randint(0, 1)
@@ -63,7 +63,8 @@ class Board:
             Card("Jack of Diamonds", 11),
             Card("Queen of Diamonds", 12),
             Card("King of Diamonds", 13),
-            Card("Ace of Diamonds", 14),
+            Card("Ace of Diamonds", 14)]
+        """
 
             Card("Two of Spades", 2),
             Card("Three of Spades", 3),
@@ -92,7 +93,7 @@ class Board:
             Card("Queen of Clubs", 12),
             Card("King of Clubs", 13),
             Card("Ace of Clubs", 14),
-        ]
+        ]"""
         return deck
 
     def end_turn(self):
@@ -535,9 +536,9 @@ def test_mcts_vs_mcts():
     p2_score = 0
     for game_number in range(number_of_games):
         game_board = Board()
-        game_board.player1.set_ai(MCTS(allowed_time=0.05))
+        game_board.player1.set_ai(MCTS(allowed_time=1))
         game_board.player1.set_name("Player1")
-        game_board.player2.set_ai(MCTS(allowed_time=0.1))
+        game_board.player2.set_ai(MCTS(allowed_time=1,  number_of_trees=10))
         game_board.player2.set_name("Player2")
         game_board.play_one_game()
         if game_board.winner.name == "Player1":

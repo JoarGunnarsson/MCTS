@@ -139,6 +139,9 @@ class LowestCard(AI):
                 moves.append(card)
 
         card_sort(moves)
+        if len(moves) != 0:
+            return moves[0]
+
         card_sort(special_cards)
         moves.extend(special_cards)
         if "pass" in legal_moves:
@@ -183,8 +186,9 @@ class MCTS(AI):
             best_move = best_child.move
             for i, move in enumerate(legal_moves):
                 if move == best_move:
-                    move_scores[i] += best_child.n
+                    move_scores[i] += 1  # best_child.n
                     break
+
         max_val = -1
         current_best = None
         for i, val in enumerate(move_scores):
@@ -227,8 +231,8 @@ class MCTS(AI):
 
     def simulation(self, node):
         simulation_board = node.board.copy()
-        simulation_board.player1.ai = LowestCard()  # Hard coded, fix this? TODO
-        simulation_board.player2.ai = LowestCard()  # Hard coded, fix this? TODO
+        simulation_board.player1.ai = Random()  # Hard coded, fix this? TODO
+        simulation_board.player2.ai = Random()  # Hard coded, fix this? TODO
         board = simulation_board.play_one_game(real_game=False)
         return board
 

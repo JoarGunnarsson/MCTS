@@ -319,7 +319,7 @@ def test_mcts_node_count():
     total_root_visits = 0
     for i in range(number_of_trials):
         game_board = game.Board()
-        game_board.player2.set_ai(AI.MCTS())
+        game_board.player2.set_ai(AI.MCTS(allowed_time=1))
         game_board.turn_player = game_board.player2
         root_node = AI.Node(None, game_board)
         start_time = time.time()
