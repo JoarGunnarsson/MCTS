@@ -258,19 +258,26 @@ def test():
     test_mcts_runtime()
     # game.test_determinize()
     # game.test_simulation_runtime()
-    # test_mcts_node_time()
+    test_mcts_node_time()
     print("Testing over.")
-    collect_data()
+    # collect_data()
 
 
 def collect_data():
     total_iters = 10
-    game_iterations = 100
+    game_iterations = 50
     wins = []
     number_of_games = 1000
+    game_boards = []
+    for _ in range(number_of_games):
+        game_board = game.Board()
+        game_board.player1.set_ai(AI.LowestCard())
+        game_board.player1.set_name("LowestCard Guy")
+        game_boards.append(game_board)
     iterations = [game_iterations * (i+1) for i in range(total_iters)]
     for i in range(total_iters):
-        mcts_win, lowest_win = game.test_mcts_vs_lowest(game_iterations, i+1, number_of_games)
+        game_boards_copy = [board.copy() for board in game_boards]
+        mcts_win, lowest_win = game.test_mcts_vs_lowest(game_iterations, i+1, number_of_games, game_boards_copy)
         wins.append(mcts_win)
         data_file = open("data.txt", "a")
         data_file.write("{}:{}\n".format(str(game_iterations * (i+1)), mcts_win / number_of_games))

@@ -104,7 +104,6 @@ class Board:
         while len(new_board.non_turn_player.hand) != cards_in_opponents_hand:
             new_board.draw(new_board.non_turn_player)
 
-        # TODO: FIX
         return new_board
 
     def play_move(self, move, real_game=True):
@@ -439,15 +438,16 @@ def test_simulation_runtime():
     print(total_time, total_time / iterations)
 
 
-def test_mcts_vs_lowest(game_iterations=100, iter_multiplier=1, number_of_games=1000):
+def test_mcts_vs_lowest(game_iterations=100, iter_multiplier=1, number_of_games=1000, game_boards=None):
+    if game_boards is None:
+        game_boards = []
     mcts_score = 0
     lowest_score = 0
     for game_number in range(number_of_games):
-        print("Allowed iterations:", game_iterations * iter_multiplier, "Iter:", iter_multiplier)
-        game_board = Board()
-        game_board.player1.set_ai(LowestCard())
-        game_board.player1.set_name("LowestCard Guy")
-        game_board.player2.set_ai(MCTS(allowed_iterations=game_iterations*iter_multiplier, number_of_trees=1))
+        print("Allowed iterations:", game_iterations * iter_multiplier, "Game:", game_number)
+        game_board = game_boards[game_number]
+        game_board.player2.set_ai(MCTS(allowed_iterations=game_iterations * iter_multiplier, number_of_trees=1,
+                                       simulation_ai_type=LowestCard))
         game_board.play_one_game()
         if game_board.turn == 1000:  # TODO: This is hard coded.
             continue

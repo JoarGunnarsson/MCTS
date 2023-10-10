@@ -106,11 +106,12 @@ class LowestCard(AI):
 class MCTS(AI):
     """Class for the MCTS AI strategy."""
 
-    def __init__(self, allowed_iterations=100, number_of_trees=1, c=math.sqrt(2)):
+    def __init__(self, allowed_iterations=100, number_of_trees=1, c=math.sqrt(2), simulation_ai_type=LowestCard):
         AI.__init__(self)
         self.allowed_iterations = allowed_iterations
         self.number_of_trees = number_of_trees
         self.c = c
+        self.simulation_ai_type = simulation_ai_type
 
     def compute_next_move(self, board):
         """Computes the next move, given the current state of the game. Returns True the number to be chosen."""
@@ -127,7 +128,7 @@ class MCTS(AI):
                 self.mcts_round(root_node)
                 n += 1
             # root_node.show_tree()
-            # print("Visits to the root node: " + str(root_node.n) + ". Allowed time: " + str(self.allowed_time) + " seconds.")
+            # print("Visits to the root node: " + str(root_node.n) + ". Allowed time: " + str(self.allowed_iterations) + " iterations.")
             best_child = mcts_select_node(root_node, "n")
             best_move = best_child.move
             for i, move in enumerate(legal_moves):
@@ -177,8 +178,8 @@ class MCTS(AI):
 
     def simulation(self, node):
         simulation_board = node.board.copy()
-        simulation_board.player1.ai = LowestCard()  # Hard coded, fix this? TODO
-        simulation_board.player2.ai = LowestCard()  # Hard coded, fix this? TODO
+        simulation_board.player1.ai = self.simulation_ai_type()
+        simulation_board.player2.ai = self.simulation_ai_type()
         board = simulation_board.play_one_game(real_game=False)
         return board
 
@@ -193,7 +194,7 @@ class MCTS(AI):
         self.backpropagation(node.parent, win)
 
     def __repr__(self):
-        return "MCTS({})".format(self.allowed_time)
+        return "MCTS({})".format(self.allowed_iterations)
 
 
 def mcts_select_node(node, mode="score"):
