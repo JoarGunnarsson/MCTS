@@ -16,7 +16,7 @@ class Board:
         player2_id = player1_id - 5
         self.player1 = Player(None, "Human Guy")
         self.player1.id = player1_id
-        self.player2 = Player(MCTS(allowed_time=0.1, number_of_trees=1), "MCTS Man")
+        self.player2 = Player(MCTS(allowed_iterations=5000, number_of_trees=10), "MCTS Man")
         self.player2.id = player2_id
         players = [self.player1, self.player2]
         random_index = random.randint(0, 1)
@@ -439,26 +439,30 @@ def test_simulation_runtime():
     print(total_time, total_time / iterations)
 
 
-def test_mcts_vs_lowest():
-    number_of_games = 100
+def test_mcts_vs_lowest(game_iterations=100, iter_multiplier=1, number_of_games=1000):
     mcts_score = 0
     lowest_score = 0
     for game_number in range(number_of_games):
+        print("Allowed iterations:", game_iterations * iter_multiplier, "Iter:", iter_multiplier)
         game_board = Board()
         game_board.player1.set_ai(LowestCard())
         game_board.player1.set_name("LowestCard Guy")
+        game_board.player2.set_ai(MCTS(allowed_iterations=game_iterations*iter_multiplier, number_of_trees=1))
         game_board.play_one_game()
+        if game_board.turn == 1000:  # TODO: This is hard coded.
+            continue
         if game_board.winner.name == "LowestCard Guy":
             lowest_score += 1
         else:
             mcts_score += 1
 
-        print("Winner of game", game_number, "was", game_board.winner)
-        print("Current score:")
-        print("MCTS:", mcts_score)
-        print("LowestCard:", lowest_score)
-        print(game_board)
-        print("\n" * 5)
+        #print("Winner of game", game_number, "was", game_board.winner)
+        #print("Current score:")
+        #print("MCTS:", mcts_score)
+        #print("LowestCard:", lowest_score)
+        #print(game_board)
+        #print("\n" * 5)
+    return mcts_score, lowest_score
 
 
 def test_mcts_vs_mcts():
@@ -467,20 +471,22 @@ def test_mcts_vs_mcts():
     p2_score = 0
     for game_number in range(number_of_games):
         game_board = Board()
-        game_board.player1.set_ai(MCTS(allowed_time=0.1))
-        game_board.player1.ai.c = 1
+        game_board.player1.set_ai(MCTS(allowed_iterations=100))
+        game_board.player1.ai.c = 0.5
         game_board.player1.set_name("Player1")
-        game_board.player2.set_ai(MCTS(allowed_time=0.1))
+        game_board.player2.set_ai(MCTS(allowed_iterations=200))
         game_board.player2.set_name("Player2")
         game_board.play_one_game()
+        if game_board.turn == 1000:  # TODO: This is hard coded.
+            continue
         if game_board.winner.name == "Player1":
             p1_score += 1
         else:
             p2_score += 1
 
-        print("Winner of game", game_number, "was", game_board.winner)
-        print("Current score:")
-        print("Player1:", p1_score)
-        print("Player2:", p2_score)
-        print(game_board)
-        print("\n" * 5)
+        # print("Winner of game", game_number, "was", game_board.winner)
+        # print("Current score:")
+        # print("Player1:", p1_score)
+        # print("Player2:", p2_score)
+        # print(game_board)
+        # print("\n" * 5)

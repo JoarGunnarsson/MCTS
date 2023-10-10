@@ -106,16 +106,15 @@ class LowestCard(AI):
 class MCTS(AI):
     """Class for the MCTS AI strategy."""
 
-    def __init__(self, allowed_time=1, number_of_trees=1, c = math.sqrt(2)):
+    def __init__(self, allowed_iterations=100, number_of_trees=1, c=math.sqrt(2)):
         AI.__init__(self)
-        self.allowed_time = allowed_time
+        self.allowed_iterations = allowed_iterations
         self.number_of_trees = number_of_trees
         self.c = c
 
     def compute_next_move(self, board):
         """Computes the next move, given the current state of the game. Returns True the number to be chosen."""
-
-        time_per_tree = self.allowed_time / self.number_of_trees
+        iterations_per_tree = int(self.allowed_iterations / self.number_of_trees)
         legal_moves = board.legal_moves()
         if len(legal_moves) == 1:
             return legal_moves[0]
@@ -123,9 +122,8 @@ class MCTS(AI):
         for tree in range(self.number_of_trees):
             determinized_board = board.determinize()
             root_node = Node(None, determinized_board, self.c)
-            start_time = time.time()
             n = 0
-            while time.time() - start_time < max(time_per_tree, 0.05):
+            for iteration in range(iterations_per_tree):
                 self.mcts_round(root_node)
                 n += 1
             # root_node.show_tree()

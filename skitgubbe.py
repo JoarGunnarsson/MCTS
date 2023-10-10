@@ -258,14 +258,26 @@ def test():
     test_mcts_runtime()
     # game.test_determinize()
     # game.test_simulation_runtime()
-    test_mcts_node_count()
+    # test_mcts_node_time()
     print("Testing over.")
     collect_data()
 
 
 def collect_data():
-    # game.test_mcts_vs_lowest()
-    game.test_mcts_vs_mcts()
+    total_iters = 10
+    game_iterations = 100
+    wins = []
+    number_of_games = 1000
+    iterations = [game_iterations * (i+1) for i in range(total_iters)]
+    for i in range(total_iters):
+        mcts_win, lowest_win = game.test_mcts_vs_lowest(game_iterations, i+1, number_of_games)
+        wins.append(mcts_win)
+        data_file = open("data.txt", "a")
+        data_file.write("{}:{}\n".format(str(game_iterations * (i+1)), mcts_win / number_of_games))
+        data_file.close()
+        # game.test_mcts_vs_mcts()
+    print(wins)
+    print(iterations)
 
 
 def test_chance_lower_card():
@@ -318,21 +330,20 @@ def test_mcts_runtime():
     print(move_string(move, game_board))
 
 
-def test_mcts_node_count():
+def test_mcts_node_time():
     number_of_trials = 10
-    total_root_visits = 0
+    starting_time = time.time()
+    mcts_iterations = 8000
     for i in range(number_of_trials):
         game_board = game.Board()
-        game_board.player2.set_ai(AI.MCTS(allowed_time=1))
+        game_board.player2.set_ai(AI.MCTS(allowed_iterations=mcts_iterations, number_of_trees=1))
         game_board.turn_player = game_board.player2
         root_node = AI.Node(None, game_board)
-        start_time = time.time()
-        time_per_tree = game_board.turn_player.ai.allowed_time / game_board.turn_player.ai.number_of_trees
-        while time.time() - start_time < max(time_per_tree, 0.05):
+        iterations_per_tree = int(game_board.turn_player.ai.allowed_iterations / game_board.turn_player.ai.number_of_trees)
+        for iteration in range(iterations_per_tree):
             game_board.turn_player.ai.mcts_round(root_node)
-        total_root_visits += root_node.n
 
-    print("Average root node visits:", total_root_visits / number_of_trials)
+    print("Average time per {} iterations:".format(mcts_iterations), (time.time() - starting_time) / number_of_trials)
 
 
 if __name__ == '__main__':
