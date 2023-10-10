@@ -66,7 +66,6 @@ class Board:
         legal_moves = []
         if self.turn_player.can_pass:
             legal_moves.append("pass")
-            #return legal_moves # TODO This removes playing again.
             for card in self.turn_player.hand:
                 if card.value == self.pile[-1].value:
                     legal_moves.append(card)
@@ -88,7 +87,6 @@ class Board:
         """Returns a determinized board state, where the cards and their order in the deck and in the opponents hand
         are randomized, and chosen from the currently unseen cards."""
         new_board = self.copy()
-        return new_board
         cards_in_opponents_hand = len(new_board.non_turn_player.hand)
         new_board.non_turn_player.hand = []
         base_deck = new_deck()
