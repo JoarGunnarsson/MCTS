@@ -40,7 +40,7 @@ def draw_tree(node, left_edge=0, right_edge=500, depth=1, mode="all"):
     # Spaces the child nodes properly.
     length_per_child = (right_edge - left_edge) // len(nodes_to_visit)
     for i, child in enumerate(nodes_to_visit):
-        node.children[i].draw_tree(left_edge + i * length_per_child, left_edge + (i + 1) * length_per_child,
+        draw_tree(node.children[i], left_edge + i * length_per_child, left_edge + (i + 1) * length_per_child,
                                    depth + 1, mode=mode)
 
     # Connects parents to their children with lines.

@@ -16,7 +16,7 @@ class Board:
         player2_id = player1_id - 5
         self.player1 = Player(None, "Human Guy")
         self.player1.id = player1_id
-        self.player2 = Player(MCTS(allowed_iterations=5000, number_of_trees=10), "MCTS Man")
+        self.player2 = Player(MCTS(allowed_iterations=8000, number_of_trees=1), "MCTS Man")
         self.player2.id = player2_id
         players = [self.player1, self.player2]
         random_index = random.randint(0, 1)
@@ -42,17 +42,21 @@ class Board:
         self.turn += 1
 
     def draw(self, player):
-        if len(self.deck) != 0:
-            player.hand.append(self.deck[0])
-            del self.deck[0]
+        if len(self.deck) == 0:
+            return
+
+        player.hand.append(self.deck[0])
+        del self.deck[0]
 
     def check_winning_position(self):
         """Checks if the current board is a win for either player. A player with 0 cards in their hand has won.
         If the turn count exceeds 1000, the MCTS player (or player 2 in general) loses."""
-        if (len(self.player1.hand) == 0 and len(self.deck) == 0) or self.turn >= 1000:
+        if len(self.deck) != 0:
+            return False
+        if len(self.player1.hand) == 0 or self.turn >= 1000:
             self.winner = self.player1
             return True
-        elif len(self.player2.hand) == 0 and len(self.deck) == 0:
+        elif len(self.player2.hand) == 0:
             self.winner = self.player2
             return True
         return False
@@ -62,6 +66,7 @@ class Board:
         legal_moves = []
         if self.turn_player.can_pass:
             legal_moves.append("pass")
+            #return legal_moves # TODO This removes playing again.
             for card in self.turn_player.hand:
                 if card.value == self.pile[-1].value:
                     legal_moves.append(card)
@@ -83,6 +88,7 @@ class Board:
         """Returns a determinized board state, where the cards and their order in the deck and in the opponents hand
         are randomized, and chosen from the currently unseen cards."""
         new_board = self.copy()
+        return new_board
         cards_in_opponents_hand = len(new_board.non_turn_player.hand)
         new_board.non_turn_player.hand = []
         base_deck = new_deck()
@@ -115,11 +121,11 @@ class Board:
                 self.player1.seen_cards.append(card)
             if real_game and card not in self.player2.seen_cards:
                 self.player2.seen_cards.append(card)
-            del self.deck[0]
+            self.deck.pop(0)
             not_special_card = card.value != 2 and card.value != 10
             if card.value < self.pile[-2].value and not_special_card:
                 self.turn_player.hand.extend(self.pile[1:])
-                del self.pile[1:]
+                self.pile = self.pile[0:1]
                 self.turn_player.can_pass = True
                 return
 
@@ -132,7 +138,7 @@ class Board:
                         safe_remove(self.player1.seen_cards, card)
                         safe_remove(self.player2.seen_cards, card)
 
-                del self.pile[1:]
+                self.pile = self.pile[0:1]
                 self.turn_player.can_pass = False
                 return
 
@@ -146,7 +152,7 @@ class Board:
 
         elif move == "pile":
             self.turn_player.hand.extend(self.pile[1:])
-            del self.pile[1:]
+            self.pile = self.pile[0:1]
             self.turn_player.can_pass = True
             return
 
@@ -172,7 +178,7 @@ class Board:
                     safe_remove(self.player1.seen_cards, card)
                     safe_remove(self.player2.seen_cards, card)
 
-            del self.pile[1:]
+            self.pile = self.pile[0:1]
             self.turn_player.can_pass = False
             return
         self.turn_player.can_pass = True
@@ -243,7 +249,6 @@ class Player:
         self.name = name
 
     def play(self, board, real_game=False):
-        """Continues to roll the dice until either a one is rolled, or the AI decides to not roll again."""
         if real_game:
             # TODO: This should be left to the GUI.
             print("Computing the next move...")
@@ -292,17 +297,11 @@ def new_deck():
 
 
 def card_values(card_list):
-    values = []
-    for card in card_list:
-        values.append(card.value)
-    return values
+    return [card.value for card in card_list]
 
 
 def copy_card_list(card_list):
-    new_card_list = []
-    for card in card_list:
-        new_card_list.append(card)
-    return new_card_list
+    return [card for card in card_list]
 
 
 def safe_remove(card_list, card_to_remove):
@@ -438,9 +437,14 @@ def test_simulation_runtime():
     print(total_time, total_time / iterations)
 
 
-def test_mcts_vs_lowest(game_iterations=100, iter_multiplier=1, number_of_games=1000, game_boards=None):
+def test_mcts_vs_lowest(game_iterations=800, iter_multiplier=1, number_of_games=50, game_boards=None):
     if game_boards is None:
         game_boards = []
+        for i in range(number_of_games):
+            new_board = Board()
+            new_board.player1.set_ai(LowestCard())
+            new_board.player1.set_name("Player1")
+            game_boards.append(new_board)
     mcts_score = 0
     lowest_score = 0
     for game_number in range(number_of_games):
@@ -451,17 +455,16 @@ def test_mcts_vs_lowest(game_iterations=100, iter_multiplier=1, number_of_games=
         game_board.play_one_game()
         if game_board.turn == 1000:  # TODO: This is hard coded.
             continue
-        if game_board.winner.name == "LowestCard Guy":
+        if type(game_board.winner.ai) == LowestCard:
             lowest_score += 1
         else:
             mcts_score += 1
-
-        #print("Winner of game", game_number, "was", game_board.winner)
-        #print("Current score:")
-        #print("MCTS:", mcts_score)
-        #print("LowestCard:", lowest_score)
-        #print(game_board)
-        #print("\n" * 5)
+        print("Winner of game", game_number, "was", game_board.winner)
+        print("Current score:")
+        print("MCTS:", mcts_score)
+        print("LowestCard:", lowest_score)
+        print(game_board)
+        print("\n" * 5)
     return mcts_score, lowest_score
 
 

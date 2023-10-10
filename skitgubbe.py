@@ -22,6 +22,9 @@ tty.setcbreak(sys.stdin)
 # TODO: Why does the MCTS ai always try to pick up the pile or chance? If playing 4 of a kind is not possible,
 # the ai loses every game (for example by removing some cards from the deck). This should not happen.
 # TODO: In the gui, perhaps show every card, but pressing enter on cards that are too low does nothing?
+# TODO: Try implementing a different game. Also, to test MCTS, remove 10s, and playing multiple cards?
+# Would check if back propagate works properly.
+
 
 class Button:
     def __init__(self, name, key="", can_be_pressed=True):
@@ -253,12 +256,13 @@ def main():
 
 def test():
     print("Starting the test procedure.")
-    test_chance_lower_card()
-    test_chance_four_card_flip()
-    test_mcts_runtime()
+    # test_chance_lower_card()
+    # test_chance_four_card_flip()
+    # test_mcts_runtime()
     # game.test_determinize()
     # game.test_simulation_runtime()
-    test_mcts_node_time()
+    # test_mcts_node_time()
+    game.test_mcts_vs_lowest()
     print("Testing over.")
     # collect_data()
 
@@ -339,7 +343,7 @@ def test_mcts_runtime():
 
 def test_mcts_node_time():
     number_of_trials = 10
-    starting_time = time.time()
+    time_total = 0
     mcts_iterations = 8000
     for i in range(number_of_trials):
         game_board = game.Board()
@@ -347,10 +351,13 @@ def test_mcts_node_time():
         game_board.turn_player = game_board.player2
         root_node = AI.Node(None, game_board)
         iterations_per_tree = int(game_board.turn_player.ai.allowed_iterations / game_board.turn_player.ai.number_of_trees)
+        starting_time = time.time()
         for iteration in range(iterations_per_tree):
             game_board.turn_player.ai.mcts_round(root_node)
+        time_total += time.time() - starting_time
 
-    print("Average time per {} iterations:".format(mcts_iterations), (time.time() - starting_time) / number_of_trials)
+    print("Average time per {} iterations:".format(mcts_iterations), (time_total) / number_of_trials)
+
 
 
 if __name__ == '__main__':

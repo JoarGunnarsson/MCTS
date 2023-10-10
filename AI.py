@@ -3,7 +3,6 @@ import math
 import time
 import utility_functions as utils
 
-
 # Implement some way to fix the inherent randomness. Multiple trees might fix this.
 # In non-deterministic games, with multiple nodes per turn, playing until you hit the opponents node could
 # drastically shorten thinking time.
@@ -15,7 +14,7 @@ class Node:
     """Class representing the nodes used for MCTS."""
 
     def __init__(self, parent, board, c=math.sqrt(2)):
-        self.c = math.sqrt(2)
+        self.c = c
         self.children = None
         self.parent = parent
         self.wins = 0
@@ -75,29 +74,47 @@ class LowestCard(AI):
         """Computes the next move, given the current state of the game. Returns True if the chosen move is to roll
         again, and returns False otherwise."""
         legal_moves = board.legal_moves()
-        moves = []
-        special_cards = []
+        current_min = 15
+        saved_two = None
+        saved_ten = None
+        best_card = None
+        saved_string_moves = []
+
         for card in legal_moves:
             if card in ["pass", "chance", "pile"]:
+                saved_string_moves.append(card)
                 continue
-            elif card.value == 2 or card.value == 10:
-                special_cards.append(card)
+
+            elif card.value == 2:
+                saved_two = card
+                continue
+
+            elif card.value == 10:
+                saved_ten = card
+                continue
+
             else:
-                moves.append(card)
+                if card.value < current_min:
+                    current_min = card.value
+                    best_card = card
 
-        card_sort(moves)
-        if len(moves) != 0:
-            return moves[0]
+        if best_card is not None:
+            return best_card
 
-        card_sort(special_cards)
-        moves.extend(special_cards)
-        if "pass" in legal_moves:
-            moves.append("pass")
-        elif "chance" in legal_moves:
-            moves.append("chance")
-        elif "pile" in legal_moves:
-            moves.append("pile")
-        return moves[0]
+        if best_card is None and saved_two is not None:
+            return saved_two
+
+        if best_card is None and saved_ten is not None:
+            return saved_ten
+
+        if "pass" in saved_string_moves:
+            return "pass"
+        elif "chance" in saved_string_moves:
+            return "chance"
+        elif "pile" in saved_string_moves:
+            return "pile"
+
+        raise ValueError("No valid moves")
 
     def __repr__(self):
         return "LowestCard"
@@ -113,7 +130,7 @@ class MCTS(AI):
         self.c = c
         self.simulation_ai_type = simulation_ai_type
 
-    def compute_next_move(self, board):
+    def compute_next_move(self, board, determinized_board=None, fixed_det=False):
         """Computes the next move, given the current state of the game. Returns True the number to be chosen."""
         iterations_per_tree = int(self.allowed_iterations / self.number_of_trees)
         legal_moves = board.legal_moves()
@@ -121,19 +138,21 @@ class MCTS(AI):
             return legal_moves[0]
         move_scores = [0 for _ in legal_moves]
         for tree in range(self.number_of_trees):
-            determinized_board = board.determinize()
+            if determinized_board is None or fixed_det is False:
+                determinized_board = board.determinize()
             root_node = Node(None, determinized_board, self.c)
             n = 0
             for iteration in range(iterations_per_tree):
                 self.mcts_round(root_node)
                 n += 1
-            # root_node.show_tree()
+
+            # display_node.show_tree(root_node)
             # print("Visits to the root node: " + str(root_node.n) + ". Allowed time: " + str(self.allowed_iterations) + " iterations.")
             best_child = mcts_select_node(root_node, "n")
             best_move = best_child.move
             for i, move in enumerate(legal_moves):
                 if move == best_move:
-                    move_scores[i] += 1  # best_child.n
+                    move_scores[i] += 1  # TODO: Could this be better? best_child.n
                     break
 
         max_val = -1
@@ -145,7 +164,6 @@ class MCTS(AI):
         return current_best
 
     def mcts_round(self, root_node):
-        # TODO: Rename this method.
         node = self.selection(root_node)
         selected_node = self.expansion(node)
         if selected_node.board.winner is None:
@@ -178,7 +196,7 @@ class MCTS(AI):
 
     def simulation(self, node):
         simulation_board = node.board.copy()
-        simulation_board.player1.ai = self.simulation_ai_type()
+        simulation_board.player1.ai = self.simulation_ai_type()  # TODO: Change this to board.set_all_ai(self.sim...)
         simulation_board.player2.ai = self.simulation_ai_type()
         board = simulation_board.play_one_game(real_game=False)
         return board
