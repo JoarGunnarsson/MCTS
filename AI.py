@@ -2,7 +2,6 @@ import random
 import math
 import time
 import utility_functions as utils
-
 # Implement some way to fix the inherent randomness. Multiple trees might fix this.
 # In non-deterministic games, with multiple nodes per turn, playing until you hit the opponents node could
 # drastically shorten thinking time.
@@ -41,7 +40,6 @@ class Node:
 
     def __repr__(self):
         return "Turn: " + str(self.board.turn) + ", Wins: " + str(self.wins) + ", Visits: " + str(self.n)
-
 
 class AI:
     """Parent class for all AIs."""

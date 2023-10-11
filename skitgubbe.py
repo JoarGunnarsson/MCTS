@@ -5,12 +5,6 @@ import internal_game as game
 import AI
 import time
 
-sys.stdout.write("\x1b[8;{rows};{cols}t".format(rows=32, cols=170))
-os.system('clear')
-
-tty.setcbreak(sys.stdin)
-
-
 # TODO: Om ai:n lägger 4 och vänder, visa det tydligare. T.ex the AI plays the 4 of Clubs and clears the pile.
 # TODO: Förbättra LowestCard(), så att mcts blir snabbare och bättre.
 # TODO: Hur många träd är bäst? Hur mycket tid ska ai:n få? Är 1.41 det bästa värdet på c? Ska man utforska mer/mindre?
@@ -359,6 +353,10 @@ def test_mcts_node_time():
     print("Average time per {} iterations:".format(mcts_iterations), (time_total) / number_of_trials)
 
 
-
 if __name__ == '__main__':
+    sys.stdout.write("\x1b[8;{rows};{cols}t".format(rows=32, cols=170))
+    os.system('clear')
+
+    tty.setcbreak(sys.stdin)
+
     main()
