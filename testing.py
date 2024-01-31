@@ -1,9 +1,8 @@
 import math
-import time
 import AI
 import internal_game as game
-import utility_functions
 import display_node
+
 
 class Board:
     def __init__(self):

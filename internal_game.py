@@ -1,8 +1,7 @@
 import random
-from AI import MCTS, LowestCard, Random, Node
+from AI import MCTS, LowestCard, Node
 import skitgubbe as gui
 import time
-import utility_functions as utils
 
 
 class Board:
@@ -14,9 +13,9 @@ class Board:
         self.starting_cards = 3
         player1_id = random.randint(50, 100)
         player2_id = player1_id - 5
-        self.player1 = Player(None, "Human Guy")
+        self.player1 = Player(None, "Human")
         self.player1.id = player1_id
-        self.player2 = Player(MCTS(allowed_iterations=8000, number_of_trees=1), "MCTS Man")
+        self.player2 = Player(MCTS(allowed_iterations=10000, number_of_trees=1), "MCTS")
         self.player2.id = player2_id
         players = [self.player1, self.player2]
         random_index = random.randint(0, 1)
@@ -92,10 +91,10 @@ class Board:
         base_deck = new_deck()
         deck = []
         for card in base_deck:
-            if card.name in utils.card_names(self.pile) or card.name in utils.card_names(self.removed_cards) or \
-                    card.name in utils.card_names(self.turn_player.hand):
+            if card.name in card_names(self.pile) or card.name in card_names(self.removed_cards) or \
+                    card.name in card_names(self.turn_player.hand):
                 continue
-            if card.name in utils.card_names(self.turn_player.seen_cards):
+            if card.name in card_names(self.turn_player.seen_cards):
                 new_board.non_turn_player.hand.append(card)
                 continue
 
@@ -279,7 +278,24 @@ class Card:
     def __init__(self, name, value=None):
         self.name = name
         if value is None:
-            self.value = utils.get_card_value(name)
+            value_str = name.split(" of ")[0]
+            value_dict = {
+                "Pile": 0,
+                "Two": 2,
+                "Three": 3,
+                "Four": 4,
+                "Five": 5,
+                "Six": 6,
+                "Seven": 7,
+                "Eight": 8,
+                "Nine": 9,
+                "Ten": 10,
+                "Jack": 11,
+                "Queen": 12,
+                "King": 13,
+                "Ace": 14,
+            }
+            self.value = value_dict[value_str]
         else:
             self.value = value
 
@@ -324,6 +340,10 @@ def board_string(game_board):
         + "..." * (len(game_board.pile) >= 5) \
         + "\n" + game_board.player2.name + "'s hand: " + str(["?" for _ in game_board.player2.hand]) \
         + "\n" + "Your hand: " + str(game_board.player1.hand) + "\n"
+
+
+def card_names(card_list):
+    return [card.name for card in card_list]
 
 
 def test_determinize():

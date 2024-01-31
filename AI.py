@@ -1,12 +1,5 @@
 import random
 import math
-import time
-import utility_functions as utils
-# Implement some way to fix the inherent randomness. Multiple trees might fix this.
-# In non-deterministic games, with multiple nodes per turn, playing until you hit the opponents node could
-# drastically shorten thinking time.
-# TODO: Define API, what functions are needed for the AI to work.
-# TODO: Are ties supported? Also, are multiple players supported? Nope.
 
 
 class Node:
@@ -67,11 +60,14 @@ class LowestCard(AI):
 
     def __init__(self):
         AI.__init__(self)
+        self.random_play_probability = 0
 
     def compute_next_move(self, board):
         """Computes the next move, given the current state of the game. Returns True if the chosen move is to roll
         again, and returns False otherwise."""
         legal_moves = board.legal_moves()
+        if random.random() < self.random_play_probability:
+            return random.choice(legal_moves)
         current_min = 15
         saved_two = None
         saved_ten = None
@@ -128,16 +124,15 @@ class MCTS(AI):
         self.c = c
         self.simulation_ai_type = simulation_ai_type
 
-    def compute_next_move(self, board, determinized_board=None, fixed_det=False):
-        """Computes the next move, given the current state of the game. Returns True the number to be chosen."""
+    def compute_next_move(self, board):
+        """Computes the next move, given the current state of the game. Returns the best action."""
         iterations_per_tree = int(self.allowed_iterations / self.number_of_trees)
         legal_moves = board.legal_moves()
         if len(legal_moves) == 1:
             return legal_moves[0]
         move_scores = [0 for _ in legal_moves]
         for tree in range(self.number_of_trees):
-            if determinized_board is None or fixed_det is False:
-                determinized_board = board.determinize()
+            determinized_board = board.determinize()
             root_node = Node(None, determinized_board, self.c)
             n = 0
             for iteration in range(iterations_per_tree):
@@ -150,7 +145,7 @@ class MCTS(AI):
             best_move = best_child.move
             for i, move in enumerate(legal_moves):
                 if move == best_move:
-                    move_scores[i] += 1  # TODO: Could this be better? best_child.n
+                    move_scores[i] += 1  # An alternative is using best_child.n
                     break
 
         max_val = -1

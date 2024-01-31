@@ -5,20 +5,6 @@ import internal_game as game
 import AI
 import time
 
-# TODO: Om ai:n lägger 4 och vänder, visa det tydligare. T.ex the AI plays the 4 of Clubs and clears the pile.
-# TODO: Förbättra LowestCard(), så att mcts blir snabbare och bättre.
-# TODO: Hur många träd är bäst? Hur mycket tid ska ai:n få? Är 1.41 det bästa värdet på c? Ska man utforska mer/mindre?
-# TODO: Implement best-child property for a node?
-# TODO: Add a menu for selecting the difficulty (the time the AI has to play).
-# TODO: Implement some more tests? For example, does determinize work?
-# TODO: After 'The AI plays...', update the board_string before computing the next move.
-# TODO: Perhaps create a move for playing 2 of the same cards, so the user doesnt have to wait for so long.
-# TODO: Why does the MCTS ai always try to pick up the pile or chance? If playing 4 of a kind is not possible,
-# the ai loses every game (for example by removing some cards from the deck). This should not happen.
-# TODO: In the gui, perhaps show every card, but pressing enter on cards that are too low does nothing?
-# TODO: Try implementing a different game. Also, to test MCTS, remove 10s, and playing multiple cards?
-# Would check if back propagate works properly.
-
 
 class Button:
     def __init__(self, name, key="", can_be_pressed=True):
